@@ -14,56 +14,54 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import AO3
 # ----> https://github.com/wendytg/ao3_api
-import basic_stats, process_articles
 import config
+import scraping_A03
 
 HEADERS = config.HEADERS
 
 def log_in(username, password):
     # log in as the user
-    '''
-    import AO3
-    s = AO3.Session(USERNAME, PASSWORD)
-
-    and then you use s like any other session: site = s.get(url)
-
-    to install the library there uve just got to go:
-
-    !pip install ao3_api
-    '''
     session = AO3.Session(username, password)
-
-    # backoff factor is delay between retries
-    # connect is number of retries in a connection error event
-    retry = Retry(connect=7, backoff_factor=5)
-
-    adapter = HTTPAdapter(max_retries=retry)
-
-    session.mount('http://', adapter)
-    session.mount('https://', adapter)
-
+    print(session.is_authed)
     # keep going through pages until there are no more pages left
     
     # If it is expired or you forget to call this function, the error:
     ## AO3.utils.AuthError: Invalid authentication token. Try calling session.refresh_auth_token()
-    session.refresh_auth_token()
+    #session.refresh_auth_token()
 
+    
+    # Have to access user information one page at a time, because we want ALL of it,
+    # but first need to get first page to find the total number of pages
+    
     ## ACCESSING BOOKMARKS
-    ##username = None
-    ##user_bookmark_url = f"https://archiveofourown.org/users/{username}/bookmarks?page={page_no}"
+    user_bookmark_url = f"https://archiveofourown.org/users/{username}/bookmarks?page=1"
+    scraping_A03.get_content(user_bookmark_url, start_page=1, end_page=1, optional_name="User_Bookmark_")
 
     ## ACCESSING HISTORY
-    # has last visited and visited count!!!!!!
-    ##username = None
-    # Likely need user auth to access, will ask for in app?
-    ##user_history_url = f"https://archiveofourown.org/users/{username}/readings?page={page_no}"
+    user_history_url = f"https://archiveofourown.org/users/{username}/readings?page=1"
+    scraping_A03.get_content(user_history_url, start_page=1, end_page=1, optional_name="User_History_")
+
+    ## ACCESSING WORKS
+    user_works_url = f"https://archiveofourown.org/users/{username}/works?page=1"
+    scraping_A03.get_content(user_works_url, start_page=1, end_page=1, optional_name="User_Works_")
 
 
+
+## TAG SEARCHING
+##Insert_Tags = None
+##page_no = 1
+
+
+##tag_url = f"https://archiveofourown.org/tags/{Insert_Tags}/works?page={page_no}"
+
+## KEYWORD SEARCHING
+##Insert_Keyword = None
+##search_url = f"https://archiveofourown.org/works/search?page={page_no}&work_search%5Bquery%5D={Insert_keyword}"
 
 
 
 if __name__ == "__main__":
     log_in(
-        username=input("Username:"),
-        password=input("Password:")
+        username=input("Username: "),
+        password=input("Password: ")
     )

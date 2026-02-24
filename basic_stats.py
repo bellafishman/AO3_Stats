@@ -14,6 +14,7 @@ import pandas as pd
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import config
+import process_articles
 
 # each page has a max of 20 works
 
@@ -24,14 +25,15 @@ import config
 # initiate new file:
 header = ['Title', 'Author', 'ID', 'Date_updated', 'Rating', 'Pairing', 'Warning', 'Complete',
             'Language', 'Word_count', 'Num_chapters', 'Num_comments', 'Num_kudos', 
-            'Num_bookmarks', 'Num_hits']
+            'Num_bookmarks', 'Num_hits', 'Date_Collected']
 
 with open(config.CSV_BASIC, 'w', encoding='utf8') as f:
     writer = csv.writer(f)
     writer.writerow(header)
 
 
-def process_basic(page_content):
+# Reading HTML content and parsing important information
+def process_basic(page_content, current_date):
     bs = BeautifulSoup(page_content, 'lxml')
     titles=[]
     authors=[]
@@ -86,9 +88,11 @@ def process_basic(page_content):
             hits.append(article.find('dd', {'class':'hits'}).text)
         except:
             hits.append('0')
+
     
     df = pd.DataFrame(list(zip(titles, authors, IDs, date_updated, ratings, pairings, warnings, complete, languages, 
                                word_count, chapters, comments, kudos, bookmarks, hits)))
+    df['Date_Collected'] = current_date
     print('Successfully processed', len(df), 'rows.')
 
     with open(config.CSV_BASIC, 'a', encoding='utf8') as f:
